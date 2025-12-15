@@ -12,7 +12,6 @@ from PIL import Image
 
 # Disable SSL verification
 ssl._create_default_https_context = ssl._create_unverified_context
-
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from src.models import DeepfakeDetector
