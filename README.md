@@ -1,66 +1,66 @@
-# Deepfake Detection System
+# 🛡️ DeepGuard: Deepfake Detection System
 
-A state-of-the-art image authenticity detection system designed to distinguish between real (camera-captured) and AI-generated (Deepfake/GAN/Diffusion) images using a **Multi-Branch Deep Learning Architecture**.
+> A state-of-the-art Multi-Branch Deep Learning system designed to distinguish between real camera-captured images and AI-generated synthetic media (GANs, Diffusion Models).
 
-## 🚀 Key Features
-*   **Multi-Branch Architecture**:
-    *   **RGB Branch**: EfficientNetV2-S for spatial feature extraction.
-    *   **Frequency Branch**: Custom CNN processing the Log-Magnitude Spectrum (FFT) to detect spectral artifacts.
-    *   **Patch Branch**: Shared CNN processing local image patches to identify inconsistent textures.
-    *   **ViT Branch**: Swin Transformer V2 (Tiny) for global semantic consistency.
-*   **Probabilistic Output**: Returns a confidence score (0.0 - 1.0) rather than a binary label.
-*   **Ensemble Inference**: Supports averaging predictions from multiple model checkpoints for robustness.
-*   **Robust Data Augmentation**: Trained with compression, resize, blur, and noise to handle diverse image qualities.
-*   **SafeTensor Support**: Secure model weight saving and loading.
+---
+
+## 📚 Documentation Index
+
+We have initialized comprehensive documentation for every aspect of this project:
+
+### 🚀 Getting Started
+*   [**Quick Start Guide**](QUICK_START.md): Get up and running in 5 minutes.
+*   [**Project Structure**](STRUCTURE.md): Understand the file organization.
+
+### 🧠 Model & Technology
+*   [**How It Works**](HOW_IT_WORKS.md): High-level explanation of the pipeline.
+*   [**Model Architecture**](MODEL_ARCHITECTURE.md): Deep dive into the 4-Branch Neural Network.
+*   [**Model Quick Reference**](MODEL_QUICK_REFERENCE.md): Inputs, Outputs, and Specs.
+*   [**Training Guide**](model_training_guide.md): How to fine-tune the model on your own data.
+*   [**Technologies Used**](TECHNOLOGIES.md): The full tech stack (PyTorch, Flask, etc.).
+
+### 🎓 Educational Resources
+*   [**Educational Booklet**](EDUCATIONAL_BOOKLET.md): What are deepfakes and why are they dangerous?
+*   [**Research Paper Draft**](Deepfake_Detection_Research_Paper.md): Academic abstract and methodology.
+
+---
+
+## ✨ Features
+
+*   **Multi-Modal Detection**: Analyzes images using 4 distinct branches:
+    *   **RGB** (Visual Artifacts)
+    *   **Frequency** (Spectral/Grid Artifacts)
+    *   **Patch** (Local Inconsistencies)
+    *   **ViT** (Global Semantic Logic)
+*   **Explainable AI**: Generates **Heatmaps** to show exactly *why* an image was flagged.
+*   **Web Interface**: Clean, modern dashboard for easy dragging-and-dropping of images.
+*   **API Ready**: REST API allows integration into other apps.
 
 ## 🛠️ Installation
-1.  **Clone the repository**:
-    ```bash
-    git clone <repo_url>
-    cd morden-detections-system
-    ```
-2.  **Install Dependencies**:
-    ```bash
-    pip install torch torchvision numpy opencv-python albumentations tqdm safetensors
-    ```
+
+```bash
+# 1. Clone
+git clone https://github.com/yourusername/morden-detections-system.git
+cd morden-detections-system
+
+# 2. Install
+pip install -r requirements_web.txt
+```
 
 ## 🏃 Usage
-### 1. Training
-Configure your dataset path in `src/config.py` or ensure `data/train` exists.
-```bash
-python src/train.py
-```
-*   **Automatic Splitting**: If `TRAIN` and `TEST` paths are identical, the script automatically verifies data and creates an 80/20 train/val split.
 
-### 2. Inference
-Run detection on a single image or a directory of images:
+### Start the Web Dashboard
 ```bash
-python src/inference.py --source path/to/image.jpg
+python app.py
 ```
-**Ensemble Inference**:
-To use multiple checkpoints for higher reliability:
+Visit `http://localhost:5001` in your browser.
+
+### Command Line Inference
 ```bash
-python src/inference.py --source path/to/image.jpg --checkpoints results/checkpoints/
+python src/inference.py --source test_images/image.jpg
 ```
 
-## ⚠️ Limitations & Uncertainty (Requirement #8)
-While this system strives for high generalization, 100% detection accuracy is theoretically impossible due to the rapid evolution of generative AI.
+---
 
-### Known Failure Scenarios
-1.  **High Compression**: Images saved with extremely low JPEG quality (Q<50) may lose the high-frequency artifacts (fingerprints) relied upon by the Frequency and Patch branches.
-2.  **Adversarial Perturbations**: Images intentionally modified with adversarial noise to fool classifiers may result in incorrect high-confidence scores.
-3.  **Perfectly Generated Anatomy**: Older models struggled with hands/eyes; newer models (e.g., SDXL, Midjourney v6) are correcting this. The ViT branch aims to catch global semantic errors, but subtle improvements may reduce detection rates.
-4.  **Unknown Generators**: The model is trained on known generators (SD, DALL-E, etc.). A completely novel architecture with different spectral characteristics might yield lower confidence until retrained.
-
-### Interpreting Scores
-*   **0.0 - 0.2**: High confidence **REAL**.
-*   **0.8 - 1.0**: High confidence **FAKE**.
-*   **0.3 - 0.7**: **Uncertain Region**. The model detects conflicting signals (e.g., realistic frequency spectrum but semantic oddities).
-    *   *Action*: Manual Verification recommended. Check for logical inconsistencies (lighting, reflections, text).
-
-## 📂 Project Structure
-*   `src/models.py`: 4-Branch Network (RGB, Freq, Patch, ViT).
-*   `src/dataset.py`: Data loading & Albumentations pipeline.
-*   `src/utils.py`: FFT/Frequency domain helpers.
-*   `src/train.py`: Training loop with SafeTensors.
-*   `src/inference.py`: Probabilistic & Ensemble inference.
+## ⚠️ Disclaimer
+While DeepGuard is trained on a vast dataset of real and fake images, no detection system is 100% perfect. This tool should be used as an *aid* for verification, not as absolute proof.
