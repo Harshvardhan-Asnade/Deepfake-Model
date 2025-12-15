@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import datetime
 import torch
 import cv2
 import os
@@ -19,9 +20,6 @@ from src.models import DeepfakeDetector
 from src.config import Config
 import database
 
-# Initialize Database
-database.init_db()
-
 try:
     from safetensors.torch import load_file
     SAFETENSORS_AVAILABLE = True
@@ -34,7 +32,10 @@ CORS(app)
 # Configuration
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+HISTORY_FOLDER = os.path.join('frontend', 'history_uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(HISTORY_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -149,6 +150,11 @@ def index():
     """Serve the frontend"""
     return send_from_directory('frontend', 'index.html')
 
+@app.route('/history_uploads/<path:filename>')
+def serve_history_image(filename):
+    """Serve history images"""
+    return send_from_directory(HISTORY_FOLDER, filename)
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -182,23 +188,33 @@ def predict():
         # Make prediction
         result, error = predict_image(filepath)
         
-        # Clean up uploaded file
-        try:
-            os.remove(filepath)
-        except:
-            pass
+        # Save to History
+        import shutil
+        history_filename = f"scan_{int(datetime.datetime.now().timestamp())}_{filename}"
+        history_path = os.path.join(HISTORY_FOLDER, history_filename)
         
-        if error:
-            return jsonify({'error': error}), 500
+        # Copy original file to history folder
+        # We need to read the file again or just copy if we haven't deleted it?
+        # We read via cv2, the file is still at filepath.
+        shutil.copy(filepath, history_path)
         
-        # Save to Database
+        # Relative path for frontend
+        relative_path = f"history_uploads/{history_filename}"
+
         database.add_scan(
             filename=filename,
             prediction=result['prediction'],
             confidence=result['confidence'],
             fake_prob=result['fake_probability'],
-            real_prob=result['real_probability']
+            real_prob=result['real_probability'],
+            image_path=relative_path
         )
+        
+        # Clean up uploaded file
+        try:
+            os.remove(filepath)
+        except:
+            pass
         
         return jsonify(result)
     
@@ -209,7 +225,15 @@ def predict():
 def get_history():
     """Get all past scans"""
     history = database.get_history()
+    history = database.get_history()
     return jsonify(history)
+
+@app.route('/api/history/<int:scan_id>', methods=['DELETE'])
+def delete_scan(scan_id):
+    """Delete a specific scan"""
+    if database.delete_scan(scan_id):
+        return jsonify({'message': 'Scan deleted'})
+    return jsonify({'error': 'Failed to delete scan'}), 500
 
 @app.route('/api/history', methods=['DELETE'])
 def clear_history():

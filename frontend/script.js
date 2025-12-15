@@ -292,6 +292,11 @@ async function handleAnalysisUpload(file) {
         previewImage.src = e.target.result;
         uploadArea.style.display = 'none';
         previewArea.style.display = 'block';
+
+        // Reset previous execution state
+        document.getElementById('heatmapToggle').style.display = 'none';
+        document.getElementById('heatmapOverlay').style.display = 'none';
+        document.getElementById('scanTimeDisplay').textContent = '--';
     };
     reader.readAsDataURL(file);
 
@@ -329,6 +334,8 @@ async function handleAnalysisUpload(file) {
         const formData = new FormData();
         formData.append('file', file);
 
+        const startTime = performance.now(); // Start timer
+
         const response = await fetch('http://localhost:5001/api/predict', {
             method: 'POST',
             body: formData
@@ -339,6 +346,13 @@ async function handleAnalysisUpload(file) {
 
         const result = await response.json();
 
+        const endTime = performance.now(); // End timer
+        const duration = ((endTime - startTime) / 1000).toFixed(2);
+        const scanTimeDisplay = document.getElementById('scanTimeDisplay');
+        if (scanTimeDisplay) {
+            scanTimeDisplay.textContent = `${duration}s`;
+        }
+
         // Store heatmap data
         if (result.heatmap) {
             const heatmapOverlay = document.getElementById('heatmapOverlay');
@@ -346,6 +360,7 @@ async function handleAnalysisUpload(file) {
             const heatmapSwitch = document.getElementById('heatmapSwitch');
 
             heatmapOverlay.src = `data:image/jpeg;base64,${result.heatmap}`;
+            heatmapOverlay.style.display = 'block'; // Make sure the image element is visible layout-wise
             heatmapToggle.style.display = 'flex';
             heatmapSwitch.checked = false;
             heatmapOverlay.style.opacity = '0';
@@ -415,7 +430,7 @@ function updateAnalysisUI(result) {
     window.probChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Fake', 'Real'],
+            labels: [`Fake ${fakeP.toFixed(1)}%`, `Real ${realP.toFixed(1)}%`],
             datasets: [{
                 data: [fakeP, realP],
                 backgroundColor: [
@@ -463,6 +478,9 @@ function resetAnalysis() {
     document.getElementById('uploadArea').style.display = 'flex';
     document.querySelector('.analysis-results').style.display = 'none';
     document.querySelector('.empty-state').style.display = 'block';
+
+    const scanTimeDisplay = document.getElementById('scanTimeDisplay');
+    if (scanTimeDisplay) scanTimeDisplay.textContent = '--';
 
     const loader = document.getElementById('analysisLoader');
     if (loader) loader.style.display = 'none';
@@ -647,6 +665,7 @@ async function loadHistory() {
 
                 const card = document.createElement('div');
                 card.className = 'history-card';
+                card.setAttribute('data-scan-id', item.id);
                 card.style.animationDelay = `${index * 0.1}s`;
                 card.innerHTML = `
                     <div class="history-card-header">
@@ -665,19 +684,32 @@ async function loadHistory() {
                         </div>
                     </div>
                 `;
+                // Create button container
+                const btnContainer = document.createElement('div');
+                btnContainer.style.display = 'flex';
+                btnContainer.style.gap = '10px';
+                btnContainer.style.marginTop = '15px';
+
+                // Download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'btn-history-download';
+                downloadBtn.innerHTML = '📄 Download Report';
+                downloadBtn.onclick = () => generateHistoryPDF(item);
+
+                // Delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-history-delete';
+                deleteBtn.innerHTML = '🗑 Delete';
+                deleteBtn.onclick = (e) => deleteScan(item.id, e);
+
+                btnContainer.appendChild(downloadBtn);
+                btnContainer.appendChild(deleteBtn);
+                card.querySelector('.history-card-body').appendChild(btnContainer);
+
                 historyList.appendChild(card);
             });
 
-            // Add Clear Button if not exists
-            if (!document.getElementById('clearHistoryBtn')) {
-                const clearBtn = document.createElement('button');
-                clearBtn.id = 'clearHistoryBtn';
-                clearBtn.className = 'btn-delete-history';
-                clearBtn.innerHTML = '🗑 Clear All History';
-                clearBtn.innerHTML = '🗑 Clear All History';
-                clearBtn.addEventListener('click', clearHistory);
-                historyList.parentElement.appendChild(clearBtn);
-            }
+            // Remove the global clear button since we have individual delete buttons now
 
         } else {
             emptyState.style.display = 'flex';
@@ -685,6 +717,174 @@ async function loadHistory() {
         }
     } catch (err) {
         console.error('Failed to load history:', err);
+    }
+}
+
+async function generateHistoryPDF(item) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Background
+    doc.setFillColor(17, 17, 17);
+    doc.rect(0, 0, 210, 297, 'F');
+
+    // Header Band
+    doc.setFillColor(227, 245, 20);
+    doc.rect(0, 0, 210, 40, 'F');
+
+    // Header Text
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text("DeepGuard Forensic Report", 105, 25, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text("ARCHIVED SCAN RECORD", 105, 33, { align: "center" });
+
+    let y = 55;
+    const leftMargin = 25;
+
+    // Add Image if available
+    if (item.image_path) {
+        try {
+            console.log('Loading image from:', item.image_path);
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+
+            await new Promise((resolve, reject) => {
+                img.onload = () => {
+                    console.log('Image loaded successfully');
+                    // Calculate dimensions to fit in PDF
+                    const maxWidth = 160;
+                    const maxHeight = 100;
+                    let width = img.width;
+                    let height = img.height;
+
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width = width * ratio;
+                    height = height * ratio;
+
+                    // Center the image
+                    const xPos = (210 - width) / 2;
+                    doc.addImage(img, 'JPEG', xPos, y, width, height);
+                    y += height + 15;
+                    resolve();
+                };
+                img.onerror = (err) => {
+                    console.error('Could not load image for PDF:', err);
+                    console.error('Image path was:', item.image_path);
+                    resolve(); // Continue without image
+                };
+                // Use absolute path from root
+                img.src = '/' + item.image_path;
+            });
+        } catch (err) {
+            console.error('Error adding image to PDF:', err);
+        }
+    } else {
+        console.warn('No image_path found in item:', item);
+    }
+
+    // Title Section
+    doc.setTextColor(227, 245, 20);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text("SCAN DETAILS", leftMargin, y);
+    y += 10;
+
+    // Info Grid
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+
+    const addField = (label, value) => {
+        doc.setTextColor(150, 150, 150);
+        doc.text(label, leftMargin, y);
+        doc.setTextColor(255, 255, 255);
+        doc.text(value, leftMargin + 50, y);
+        y += 12;
+    };
+
+    addField("Filename:", item.filename);
+    addField("Date:", new Date(item.timestamp).toLocaleString());
+    addField("Prediction:", item.prediction);
+    addField("Confidence:", `${(item.confidence * 100).toFixed(1)}%`);
+
+    y += 10;
+
+    // Probabilities Section
+    doc.setTextColor(227, 245, 20);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text("MODEL ANALYSIS", leftMargin, y);
+    y += 10;
+
+    const fakeProb = item.fake_probability ? (item.fake_probability * 100).toFixed(1) + '%' : 'N/A';
+    const realProb = item.real_probability ? (item.real_probability * 100).toFixed(1) + '%' : 'N/A';
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+
+    addField("Fake Probability:", fakeProb);
+    addField("Real Probability:", realProb);
+
+    // Footer
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Generated automatically by DeepGuard AI System", 105, 280, { align: "center" });
+    doc.text(`ID: ${item.id}`, 105, 285, { align: "center" });
+
+    doc.save(`DeepGuard_Report_${item.filename}.pdf`);
+}
+
+async function deleteScan(scanId, event) {
+    // Find the card element by data attribute
+    const targetCard = document.querySelector(`[data-scan-id="${scanId}"]`);
+
+    if (targetCard) {
+        // Smooth fade out
+        targetCard.style.transition = 'all 0.3s ease';
+        targetCard.style.opacity = '0';
+        targetCard.style.transform = 'scale(0.8)';
+
+        // Wait for animation
+        await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    try {
+        const response = await fetch(`/api/history/${scanId}`, { method: 'DELETE' });
+        if (response.ok) {
+            // Remove the card from DOM directly instead of reloading
+            if (targetCard) {
+                targetCard.remove();
+            }
+
+            // Check if history is empty now
+            const historyList = document.getElementById('historyList');
+            const remainingCards = historyList.querySelectorAll('.history-card');
+            if (remainingCards.length === 0) {
+                const emptyState = document.getElementById('historyEmptyState');
+                if (emptyState) {
+                    emptyState.style.display = 'flex';
+                }
+            }
+        } else {
+            console.error('Failed to delete scan');
+            if (targetCard) {
+                // Restore if failed
+                targetCard.style.opacity = '1';
+                targetCard.style.transform = 'scale(1)';
+            }
+        }
+    } catch (err) {
+        console.error('Error deleting scan:', err);
+        if (targetCard) {
+            // Restore if failed
+            targetCard.style.opacity = '1';
+            targetCard.style.transform = 'scale(1)';
+        }
     }
 }
 

@@ -32,17 +32,25 @@ def init_db():
             print("✅ Database initialized successfully.")
         except sqlite3.Error as e:
             print(f"Error initializing database: {e}")
+        
+        # Migration: Add image_path if not exists
+        try:
+            conn.execute('ALTER TABLE history ADD COLUMN image_path TEXT')
+            print("✅ Added image_path column.")
+        except sqlite3.Error:
+            pass # Column likely exists
+            
         finally:
             conn.close()
 
-def add_scan(filename, prediction, confidence, fake_prob, real_prob):
+def add_scan(filename, prediction, confidence, fake_prob, real_prob, image_path=""):
     conn = get_db_connection()
     if conn:
         try:
             conn.execute('''
-                INSERT INTO history (filename, prediction, confidence, fake_probability, real_probability)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (filename, prediction, confidence, fake_prob, real_prob))
+                INSERT INTO history (filename, prediction, confidence, fake_probability, real_probability, image_path)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (filename, prediction, confidence, fake_prob, real_prob, image_path))
             conn.commit()
             return True
         except sqlite3.Error as e:
@@ -80,6 +88,19 @@ def clear_history():
             conn.close()
     return False
 
-# Initialize DB on module load if not exists
-if not os.path.exists(DB_NAME):
-    init_db()
+def delete_scan(scan_id):
+    conn = get_db_connection()
+    if conn:
+        try:
+            conn.execute('DELETE FROM history WHERE id = ?', (scan_id,))
+            conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error deleting scan: {e}")
+            return False
+        finally:
+            conn.close()
+    return False
+
+# Initialize DB on module load
+init_db()
