@@ -5,25 +5,29 @@ This document provides a high-level overview of the `open-deepfake-detection` re
 ```
 Morden Detections system/
 ├── README.md                   # Primary project entry point
-├── app.py                      # Flask backend API & Server entry point
-├── requirements_web.txt        # Python dependencies for the web application
-├── finetune_datasetB.py        # Example script for fine-tuning on new data
-├── extensions/                 # Chrome extension source code
-├── frontend/                   # Web user interface files
+├── backend/                    # Flask backend API & Server
+│   ├── app.py                  # Server entry point
+│   ├── database.py             # Database management
+│   ├── requirements_web.txt    # Python dependencies
+│   └── uploads/                # Temporary storage
+├── frontend/                   # Web user interface
 │   ├── index.html              # Main dashboard page
 │   ├── style.css               # Styling
-│   └── script.js               # Frontend logic
-├── src/                        # Core source code
-│   ├── config.py               # Global configuration (Hyperparameters, Paths)
-│   ├── dataset.py              # Custom PyTorch Dataset & Data Loading
-│   ├── models.py               # DeepGuard Model Architecture Definition
-│   ├── inference.py            # Inference logic & Ensemble support
-│   ├── train.py                # Main training loop
-│   └── utils.py                # Helper functions (FFT, logging)
-├── results/                    # Output directory
-│   ├── checkpoints/            # Saved model weights (.safetensors)
-│   └── logs/                   # Training logs
-└── uploads/                    # Temporary storage for analyzed images
+│   ├── script.js               # Frontend logic
+│   └── history_uploads/        # Saved history images
+├── model/                      # Deepfake Detection Logic
+│   ├── src/                    # Core source code
+│   │   ├── config.py           # Configuration
+│   │   ├── dataset.py          # Data Loading
+│   │   ├── models.py           # Model Architecture
+│   │   ├── inference.py        # Inference logic
+│   │   ├── train.py            # Training loop
+│   │   └── utils.py            # Helper functions
+│   ├── evaluate_models.py      # Evaluation scripts
+│   ├── finetune_datasetB.py    # Fine-tuning script
+│   └── results/                # Chekpoints and logs
+├── extension/                  # Chrome extension source code
+└── documentation/              # Project documentation
 ```
 
 ## Key Files Description

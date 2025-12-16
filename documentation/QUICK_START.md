@@ -16,8 +16,10 @@ Clone the repository and install the required dependencies:
 git clone https://github.com/yourusername/morden-detections-system.git
 cd morden-detections-system
 
-# Install dependencies
+# Install backend dependencies
+cd backend
 pip install -r requirements_web.txt
+cd ..
 ```
 
 *Note: If you plan to train the model, you may need additional dependencies found in `requirements.txt` (if available) or install `tqdm` manually.*
@@ -28,6 +30,7 @@ The easiest way to use the system is via the Web UI.
 
 1.  **Start the Server**:
     ```bash
+    cd backend
     python app.py
     ```
 
@@ -45,7 +48,8 @@ The easiest way to use the system is via the Web UI.
 You can run detection on a single image without the web server.
 
 ```bash
-python src/inference.py --source /path/to/your/image.jpg
+cd model
+python -m src.inference --source /path/to/your/image.jpg
 ```
 
 **Options:**
@@ -55,7 +59,7 @@ python src/inference.py --source /path/to/your/image.jpg
 ## 4. Troubleshooting
 
 **"No checkpoint found" warning?**
-The system will load a randomly initialized model for demonstration purposes if no weights are found. To get actual detection results, ensure you have placed `best_model.safetensors` in the `results/checkpoints/` directory.
+The system will load a randomly initialized model for demonstration purposes if no weights are found. To get actual detection results, ensure you have placed `best_finetuned_datasetB.safetensors` in the `model/results/checkpoints/` directory.
 
 **"CUDA not available"?**
 The system automatically defaults to CPU if no GPU is detected. Inference will be slower but fully functional.

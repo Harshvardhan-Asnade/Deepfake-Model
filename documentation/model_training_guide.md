@@ -19,7 +19,9 @@ Dataset/
 
 ## 🛠️ Configuration
 
-Open `src/config.py` to adjust hyperparameters before training:
+## 🛠️ Configuration
+
+Open `model/src/config.py` to adjust hyperparameters before training:
 
 *   `BATCH_SIZE`: Set to 16 or 32 depending on your VRAM (32 needs ~8GB VRAM).
 *   `LEARNING_RATE`: Default `1e-4` for training from scratch, `5e-6` for fine-tuning.
@@ -31,6 +33,7 @@ Open `src/config.py` to adjust hyperparameters before training:
 We provided a specialized script `finetune_datasetB.py` for fine-tuning.
 
 ```bash
+cd model
 python finetune_datasetB.py
 ```
 **What this script does:**
@@ -43,7 +46,8 @@ python finetune_datasetB.py
 For training from scratch or main training loops:
 
 ```bash
-python src/train.py
+cd model
+python -m src.train
 ```
 *Note: Ensure you update the paths in `src/config.py` to point to your data source first.*
 
