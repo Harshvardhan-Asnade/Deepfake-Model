@@ -74,22 +74,31 @@ def train():
     # Resume from checkpoint if exists
     start_epoch = 0
     best_acc = 0.0
+    
+    # Priority:
+    # 1. best_model.safetensors (if we crashed mid-training)
+    # 2. patched_model.safetensors (the model we want to improve)
+    
     resume_path = os.path.join(Config.CHECKPOINT_DIR, "best_model.safetensors")
     if not os.path.exists(resume_path):
-        resume_path = resume_path.replace(".safetensors", ".pth")
+        resume_path = os.path.join(Config.CHECKPOINT_DIR, "patched_model.safetensors")
     
     if os.path.exists(resume_path):
         print(f"\n🔄 Found existing checkpoint: {resume_path}")
-        response = input("Resume training from this checkpoint? (y/n): ").strip().lower()
-        if response == 'y':
+        print("Auto-resuming to FINETUNE this model...")
+        
+        try:
             if resume_path.endswith(".safetensors") and SAFETENSORS_AVAILABLE:
                 state_dict = load_file(resume_path)
             else:
                 state_dict = torch.load(resume_path, map_location=device)
-            model.load_state_dict(state_dict)
-            print("✅ Resumed from checkpoint. Starting from where you left off.")
-            # Note: We don't track epoch number in checkpoint, so we continue counting from 0
-            # If you want to track epoch, we'd need to save optimizer state too
+            
+            # Use strict=False to allow for minor architecture changes or missing keys
+            model.load_state_dict(state_dict, strict=False)
+            print("✅ Weights loaded. Starting Fine-Tuning.")
+        except Exception as e:
+            print(f"⚠ Failed to load checkpoint: {e}")
+            print("Starting from ImageNet weights.")
     
     # Loop
     
