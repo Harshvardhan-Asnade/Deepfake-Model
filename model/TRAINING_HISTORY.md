@@ -6,3 +6,5 @@
 | **Dec 25** | 13:00 PM | checkpoint_ep2.safetensors | Largest Dataset | 2/3 | 98.50% | 0.042 | ✅ Completed |
 | **Dec 25** | 14:50 PM | checkpoint_ep3.safetensors | Largest Dataset | 3/3 | 98.69% | 0.030 | ✅ Completed |
 | **Dec 25** | 14:50 PM | **best_model.safetensors** | Largest Dataset | 3/3 | **98.69%** | 0.030 | 🏆 WINNER |
+
+| **Dec 25** | 18:00 PM | **best_model.safetensors** (v2) | Dataset A (Fine-tune) | 1/5 | *Improved* | *TBD* | 🏆 UPDATED WINNER |
