@@ -25,9 +25,10 @@ dataset/
 ```
 
 ### 2. Configure Training Script
-Open `model/finetune_largest.py` and update the `TRAIN_PATH` and `VAL_PATH` variables:
+Open `model/finetune.py` and update the `TRAIN_PATH` and `VAL_PATH` variables if necessary, or pass them as arguments if supported.
 
 ```python
+# In model/finetune.py
 TRAIN_PATH = "/absolute/path/to/dataset/Train"
 VAL_PATH = "/absolute/path/to/dataset/Validation"
 ```
@@ -36,13 +37,13 @@ VAL_PATH = "/absolute/path/to/dataset/Validation"
 Execute the script from the `model` directory:
 ```bash
 cd model
-python finetune_largest.py
+python finetune.py
 ```
 
-**Key Parameters (in `finetune_largest.py`):**
+**Key Parameters (in `finetune.py`):**
 - **Learning Rate**: `1e-5` (Lower than initial training to preserve features)
 - **Epochs**: `1` (Usually sufficient for transfer learning on large datasets)
-- **Checkpoint Strategy**: The script automatically looks for `best_finetuned_largest.safetensors` or `best_model.safetensors` to resume training.
+- **Checkpoint Strategy**: The script automatically looks for `best_model.safetensors` to resume training.
 
 ---
 

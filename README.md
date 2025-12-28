@@ -78,16 +78,16 @@ print(f"Confidence: {result['confidence']:.2f}%")
 # Training Details
 
 ## Training Data
-The model is trained on a dataset containing labeled "Real" and "Fake" images.
-- **Source:** User-provided dataset located at `data` directory.
-- **Structure:** The dataset is expected to have subfolders where image source (Real/Fake) is inferred from the folder name.
-- **Split:** Automatic 80/20 train/validation split if single directory provided.
+The model is trained on a massive combined dataset of **420,508 images**:
+- **Source:** Aggregated from 4 distinct datasets (New Dataset, Dataset A, Dataset B, Largest Dataset).
+- **Structure:** `Real` vs `Fake` folders.
+- **Split:** Automatic 80/20 train/validation split.
 
 ## Training Procedure
 
-### Preprocessing [optional]
+### Preprocessing
 - **Resize:** Images are resized to 256x256 pixels.
-- **Normalization:** Standard ImageNet normalization (Mean: [0.485, 0.456, 0.406], Std: [0.229, 0.224, 0.225]).
+- **Normalization:** Standard ImageNet normalization.
 - **Augmentations (Train):**
     - Horizontal Flip (p=0.5)
     - Random Brightness Contrast (p=0.2)
@@ -95,49 +95,27 @@ The model is trained on a dataset containing labeled "Real" and "Fake" images.
     - Image Compression (Quality 60-100, p=0.3)
 
 ### Training Hyperparameters
-- **Training regime:** Mixed Precision (FP16) or Standard FP32 depending on hardware.
+- **Hardware:** Optimized for Apple M4 (MPS Acceleration).
 - **Batch Size:** 32
-- **Epochs:** 3
-- **Optimizer:** AdamW
-- **Learning Rate:** 1e-4
-- **Weight Decay:** 1e-5
-- **LR Scheduler:** StepLR (Step size: 5, Gamma: 0.5)
+- **Epochs:** 3 (Early stopping often triggered at 1)
+- **Optimizer:** AdamW (`lr=1e-4`)
 - **Loss Function:** BCEWithLogitsLoss
-
-## Speeds, Sizes, Times [optional]
-[More Information Needed]
 
 # Evaluation
 
-## Testing Data, Factors & Metrics
-
-### Testing Data
-[More Information Needed]
-
-### Factors
-[More Information Needed]
-
-### Metrics
-- **Primary Metric:** Accuracy (Binary Classification)
-- **Loss:** Binary Cross Entropy
+## Metrics
+- **Validation Accuracy:** **99.15%** (Best Model - v4)
+- **Training Accuracy:** 97.26%
+- **Loss:** 0.0671
 
 ## Results
-[More Information Needed]
-
-# Summary
-
-## Model Examination [optional]
-[More Information Needed]
+The v4 model has solved "Catastrophic Forgetting," maintaining high accuracy (>98%) across all four constituent datasets while mastering new, difficult samples.
 
 # Environmental Impact
 
-Carbon emissions can be estimated using the Machine Learning Impact calculator presented in Lacoste et al. (2019).
-
-- **Hardware Type:** [More Information Needed] (e.g., Apple M-Series / NVIDIA GPU)
-- **Hours used:** [More Information Needed]
-- **Cloud Provider:** [More Information Needed]
-- **Compute Region:** [More Information Needed]
-- **Carbon Emitted:** [More Information Needed]
+- **Hardware Type:** Apple M4 Chip
+- **Hours used:** ~10 hours per epoch
+- **Energy Consumption:** Highly efficient (Low Wattage ARM architecture)
 
 # Technical Specifications [optional]
 

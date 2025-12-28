@@ -64,30 +64,7 @@ The backend requires a Python environment with PyTorch and GPU support, making *
     - Copy the contents of your `backend` folder into this new directory.
     - Copy your `model` folder into the root of the Space as well.
 
-3.  **Create Dockerfile**:
-    Create a `Dockerfile` in the root of your Space with the following content:
-
-    ```dockerfile
-    FROM python:3.9
-
-    WORKDIR /app
-
-    # Install system dependencies for OpenCV
-    RUN apt-get update && apt-get install -y libgl1-mesa-glx
-
-    # Copy requirements
-    COPY requirements_web.txt .
-    RUN pip install --no-cache-dir -r requirements_web.txt
-
-    # Copy code
-    COPY . .
-
-    # Run the app
-    EXPOSE 7860
-    CMD ["python", "app.py"]
-    ```
-
-    *Note: You might need to update `app.py` to listen on port 7860.*
+    _The `Dockerfile` and `app.py` configuration have already been prepared for you in the `huggingface_deploy` folder._
 
 4.  **Update `app.py` for Hugging Face**:
     Change the run command at the bottom of `app.py`:

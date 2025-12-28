@@ -359,7 +359,8 @@ if __name__ == '__main__':
     load_model()
     
     print("=" * 60)
-    print("🌐 Starting server on http://localhost:5001")
+    port = int(os.environ.get("PORT", 7860))
+    print(f"🌐 Starting server on http://0.0.0.0:{port}")
     print("=" * 60)
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=False, host='0.0.0.0', port=port)

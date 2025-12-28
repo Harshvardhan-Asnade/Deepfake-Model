@@ -9,3 +9,4 @@
 
 | **Dec 25** | 18:00 PM | **best_model.safetensors** (v2) | Dataset A (Fine-tune) | 1/5 | **98.35%** | *TBD* | 🏆 UPDATED WINNER |
 | **Dec 28** | 09:51 AM | checkpoint_ep1.safetensors | Combined (All 4) | 1/3 | 97.26% | 0.0671 | ✅ Saved (New Best) |
+| **Dec 28** | 09:55 AM | **best_model.safetensors** (v4) | Combined (Validation) | -- | **99.15%** | -- | 🏆 CURRENT BEST |

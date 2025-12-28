@@ -81,36 +81,51 @@ def main():
 
     results = []
 
-    print("-" * 80)
-    print(f"{'Filename':<40} | {'Verdict':<8} | {'Conf':<6} | {'Avg':<6} | {'Max':<6} | {'SuspFrames'}")
-    print("-" * 80)
+    print("-" * 90)
+    print(f"{'Filename':<30} | {'GT':<5} | {'Verdict':<8} | {'Conf':<6} | {'Avg':<6} | {'Max':<6} | {'SuspFrames'}")
+    print("-" * 90)
 
-    for video_path in tqdm(video_files, desc="Processing"):
-        try:
-            # Run inference (fast mode: 1 fps)
-            res = video_inference.process_video(video_path, model, transform, device, frames_per_second=1)
-            
-            if "error" in res:
-                print(f"Error processing {os.path.basename(video_path)}: {res['error']}")
-                continue
+    try:
+        for video_path in tqdm(video_files, desc="Processing"):
+            try:
+                # Run inference (fast mode: 1 fps)
+                res = video_inference.process_video(video_path, model, transform, device, frames_per_second=1)
                 
-            filename = os.path.basename(video_path)
-            suspicious = len(res.get('suspicious_frames', []))
-            
-            results.append({
-                "Filename": filename,
-                "Verdict": res['prediction'],
-                "Confidence": res['confidence'],
-                "AvgProb": res['avg_fake_prob'],
-                "MaxProb": res['max_fake_prob'],
-                "SuspiciousFrames": suspicious
-            })
-            
-            # Print row
-            print(f"{filename[:40]:<40} | {res['prediction']:<8} | {res['confidence']:.2f}   | {res['avg_fake_prob']:.2f}   | {res['max_fake_prob']:.2f}   | {suspicious}")
-            
-        except Exception as e:
-            print(f"Failed {video_path}: {e}")
+                if "error" in res:
+                    print(f"Error processing {os.path.basename(video_path)}: {res['error']}")
+                    continue
+                    
+                filename = os.path.basename(video_path)
+                
+                # Infer Ground Truth
+                lower_path = video_path.lower()
+                if "real" in lower_path:
+                    ground_truth = "REAL"
+                elif "fake" in lower_path:
+                    ground_truth = "FAKE"
+                else:
+                    ground_truth = "UNKNOWN"
+
+                suspicious = len(res.get('suspicious_frames', []))
+                
+                results.append({
+                    "Filename": filename,
+                    "GroundTruth": ground_truth,
+                    "Verdict": res['prediction'],
+                    "Confidence": res['confidence'],
+                    "AvgProb": res['avg_fake_prob'],
+                    "MaxProb": res['max_fake_prob'],
+                    "SuspiciousFrames": suspicious
+                })
+                
+                # Print row
+                gt_str = ground_truth if ground_truth != "UNKNOWN" else "?"
+                print(f"{filename[:30]:<30} | {gt_str:<5} | {res['prediction']:<8} | {res['confidence']:.2f}   | {res['avg_fake_prob']:.2f}   | {res['max_fake_prob']:.2f}   | {suspicious}")
+                
+            except Exception as e:
+                print(f"Failed {video_path}: {e}")
+    except KeyboardInterrupt:
+        print("\n\n⚠ Interrupted by user. Generating summary for processed videos so far...")
 
     # Summary
     print("\n" + "=" * 30)
@@ -123,7 +138,36 @@ def main():
         reals = len(df[df['Verdict'] == 'REAL'])
         print(f"Total Videos: {total}")
         print(f"Detected FAKE: {fakes} ({(fakes/total)*100:.1f}%)")
+    if not df.empty:
+        total = len(df)
+        fakes = len(df[df['Verdict'] == 'FAKE'])
+        reals = len(df[df['Verdict'] == 'REAL'])
+        
+        print(f"Total Videos: {total}")
+        print(f"Detected FAKE: {fakes} ({(fakes/total)*100:.1f}%)")
         print(f"Detected REAL: {reals} ({(reals/total)*100:.1f}%)")
+        
+        # Calculate Metrics
+        valid_df = df[df['GroundTruth'] != 'UNKNOWN']
+        if not valid_df.empty:
+            tp = len(valid_df[(valid_df['GroundTruth'] == 'FAKE') & (valid_df['Verdict'] == 'FAKE')])
+            tn = len(valid_df[(valid_df['GroundTruth'] == 'REAL') & (valid_df['Verdict'] == 'REAL')])
+            fp = len(valid_df[(valid_df['GroundTruth'] == 'REAL') & (valid_df['Verdict'] == 'FAKE')])
+            fn = len(valid_df[(valid_df['GroundTruth'] == 'FAKE') & (valid_df['Verdict'] == 'REAL')])
+            
+            accuracy = (tp + tn) / len(valid_df) * 100
+            precision = tp / (tp + fp) * 100 if (tp + fp) > 0 else 0
+            recall = tp / (tp + fn) * 100 if (tp + fn) > 0 else 0
+            f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+            
+            print("-" * 30)
+            print(" METRICS (on labeled data)")
+            print("-" * 30)
+            print(f"Accuracy:  {accuracy:.2f}%")
+            print(f"Precision: {precision:.2f}%")
+            print(f"Recall:    {recall:.2f}%")
+            print(f"F1 Score:  {f1:.2f}%")
+            print(f"Confusion Matrix: TP={tp}, TN={tn}, FP={fp}, FN={fn}")
         
         # Save CSV
         output_csv = "video_batch_results.csv"

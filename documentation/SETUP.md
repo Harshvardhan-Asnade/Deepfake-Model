@@ -61,11 +61,11 @@ You can now drag and drop images to test them!
 ### Common Issues
 
 #### 1. "Model file not found"
-**Error**: `❌ CRITICAL ERROR: Model file not found at: .../patched_model.safetensors`
+**Error**: `❌ CRITICAL ERROR: Model file not found at: .../best_model.safetensors`
 **Fix**:
 - Ensure you have downloaded or trained a model.
 - Place the `.safetensors` file in `model/results/checkpoints/`.
-- Rename it to `patched_model.safetensors` or update `load_model()` in `backend/app.py`.
+- Rename it to `best_model.safetensors` or update `load_model()` in `backend/app.py`.
 
 #### 2. "Safetensors not installed"
 **Error**: `Warning: safetensors not installed.`
