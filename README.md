@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Documentation/logo.ico" alt="DeepGuard" width="120"/>
+  <img src="logo.ico" alt="DeepGuard" width="120"/>
 </p>
 
 <h1 align="center">DeepGuard</h1>
@@ -89,16 +89,6 @@ Before the neural network even runs, DeepGuard also checks for **C2PA content cr
 | Precision | 97.26% |
 | ROC-AUC | 0.9771 |
 | Loss (BCE) | 0.0912 |
-
-### Zero-Shot Generalization — Generators Never Seen in Training
-
-| Generator | Accuracy | Precision | Recall |
-|-----------|:--------:|:---------:|:------:|
-| SDXL Turbo | 96.2% | 95.8% | 96.7% |
-| Adobe Firefly | 97.9% | 97.5% | 98.3% |
-| Bing Image Creator | 98.5% | 98.2% | 98.8% |
-| StyleGAN-XL | 98.9% | 98.6% | 99.2% |
-
 ### Why Four Branches Matter — Ablation Study
 
 | Configuration | Accuracy | Error Reduction vs. Baseline |
